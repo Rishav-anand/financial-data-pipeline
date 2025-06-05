@@ -18,7 +18,7 @@ spark = SparkSession.builder.appName("CurrencyNormalization").getOrCreate()
 logger.info("✅ Spark session initialized")
 
 try:
-    # ---------- Load raw transactions ----------
+    # ---------- Load raw transactions ---------- ---- ----- ----
     logger.info("📥 Reading raw transaction data from S3...")
     txn_df = spark.read.option("header", "true").option("inferSchema", "true") \
         .csv("s3://financial-data-pipeline-project/raw_data/raw_transaction_data.csv")
