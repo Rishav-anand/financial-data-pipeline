@@ -24,7 +24,7 @@ try:
         .csv("s3://financial-data-pipeline-project/raw_data/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
 
-    # ---------- Fetch and broadcast exchange rates ----------
+    # ---------- Fetch and broadcast exchange rates ------------
     logger.info("🔄 Fetching exchange rates JSON files from S3...")
     s3 = boto3.client('s3')
     bucket_name = "financial-data-pipeline-project"
