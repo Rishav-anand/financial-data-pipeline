@@ -1,0 +1,91 @@
+S3 Structure Example:
+
+->Let's say your S3 bucket contains these files:
+	Files:
+	exchange_rates/2024-01-01.json
+	exchange_rates/2024-01-02.json
+
+-> Each file looks like:
+
+	📄 2024-01-01.json
+
+	{
+	  "base": "SGD",
+	  "rates": {
+		"USD": 0.74,
+		"INR": 54.2
+	  }
+	}
+	📄 2024-01-02.json
+
+	{
+	  "base": "SGD",
+	  "rates": {
+		"USD": 0.75,
+		"INR": 55.0
+	  }
+	}
+	
+🔍 1. List All Files in exchange_rates/
+
+rate_files = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+
+✅ This fetches metadata for all files under exchange_rates/. Example result:
+{
+  "Contents": [
+    { "Key": "exchange_rates/2024-01-01.json" },
+    { "Key": "exchange_rates/2024-01-02.json" }
+  ]
+}
+🧠 2. Build and Broadcast the Map
+
+exchange_rates = {}
+for obj in rate_files.get("Contents", []):
+    key = obj["Key"]
+    if key.endswith(".json"):
+        date = key.split("/")[-1].replace(".json", "")
+        file = s3.get_object(Bucket=bucket_name, Key=key)
+        rate_json = json.loads(file['Body'].read())
+        exchange_rates[date] = rate_json.get("rates", {})
+		
+This loop loads each file's contents into a Python dictionary:
+exchange_rates = {
+  "2024-01-01": {"USD": 0.74, "INR": 54.2},
+  "2024-01-02": {"USD": 0.75, "INR": 55.0}
+}
+
+Then it’s broadcasted to all worker nodes in Spark:
+broadcast_rates = spark.sparkContext.broadcast(exchange_rates)
+✅ Broadcasting makes this dictionary available in every executor efficiently.
+
+🧮 3. UDF for Normalization
+def normalize_currency(amount, currency, date):
+    rates_by_date = broadcast_rates.value.get(date)
+    rate = rates_by_date.get(currency.upper())
+    return float(amount) / float(rate)
+
+🔧 Example:
+	Say you have this transaction in your DataFrame:
+
+	Date		Withdrawal_amt	Withdrawal_currency
+	2024-01-01	742				USD
+
+	Your UDF logic:
+	Looks up exchange_rates["2024-01-01"]["USD"] = 0.74
+
+	Returns: 742 / 0.74 = 1002.7 SGD(This is the normalized amount.)
+
+⚙️ 4. Apply Normalization
+normalized_df = txn_df.withColumn("normalized_withdrawal", normalize_udf(
+        col("Withdrawal_amt"), col("Withdrawal_currency"), col("Date")))
+
+✅ This runs the UDF row-by-row to:
+Normalize withdrawal and deposit amounts
+
+Create two new columns:
+1. normalized_withdrawal
+2. normalized_deposit
+
+🧾 Final Output Example:
+Date		Withdrawal_amt	Withdrawal_currency	normalized_withdrawal
+2024-01-01	742	USD			1002.70

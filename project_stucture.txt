@@ -1,0 +1,28 @@
+financial-data-pipeline/
+│
+├── config/
+│   └── config.json                  # API key, base currency, S3 bucket, date range
+│
+├── data/
+│   ├── raw/
+│   │   └── transactions.csv         # Simulated raw banking data (10–20MB)
+│   └── exchange_rates/
+│       └── YYYY-MM-DD.json         # Fetched exchange rate JSON files
+│
+├── scripts/
+│   ├── fetch_exchange_rates.py     # Python script to call API and save JSON
+│   ├── upload_to_s3.py             # Upload exchange rates and raw data to S3
+│   ├── spark_transformations.py    # PySpark job for currency normalization
+│   └── generate_sample_data.py     # To generate realistic sample bank transactions
+│
+├── glue/
+│   └── glue_crawler_setup.py       # (Optional) Boto3 script to create/run Glue crawler
+│
+├── athena/
+│   └── queries.sql                 # Sample Athena queries for final analysis
+│
+├── logs/
+│   └── pipeline.log                # Optional: store logs for fetches or Spark runs
+│
+├── README.md
+└── requirements.txt                # Python requirements for scripts (boto3, requests, etc.)
