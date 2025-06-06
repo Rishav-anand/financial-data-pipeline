@@ -1,7 +1,7 @@
 import requests
 import json
 import boto3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,date
 
 # Load config
 with open('config/config.json') as f:
@@ -12,8 +12,13 @@ bucket_name = config["s3_bucket"]
 app_id = config["api_key"]
 base_currency = config["base_currency"]
 
-start_date = datetime.strptime(config["start_date"], "%Y-%m-%d")
-end_date = datetime.strptime(config["end_date"], "%Y-%m-%d")
+# start_date = datetime.strptime(config["start_date"], "%Y-%m-%d")
+# end_date = datetime.strptime(config["end_date"], "%Y-%m-%d")
+
+today = date.today()
+
+start_date = today
+end_date = today
 
 date = start_date
 while date <= end_date:
