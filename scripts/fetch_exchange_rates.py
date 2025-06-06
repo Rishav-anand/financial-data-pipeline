@@ -22,7 +22,7 @@ while date <= end_date:
     
     response = requests.get(url)
     if response.status_code == 200:
-        filename = f"exchange_rates/{date_str}.json"
+        filename = f"data/exchange_rates/{date_str}.json"
         s3.put_object(Bucket=bucket_name, Key=filename, Body=response.content)
         print(f"Uploaded {filename} to S3.")
     else:
