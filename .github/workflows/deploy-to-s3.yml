@@ -15,7 +15,7 @@ jobs:
 
     - name: Sync to S3
       run: |
-        aws s3 sync . s3://financial-data-pipeline-project-new/ \
+        aws s3 sync . s3://financial-data-pipeline-project/ \
           --exclude ".git/*" \
           --delete
       env:

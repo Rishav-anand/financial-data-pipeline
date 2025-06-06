@@ -1,0 +1,144 @@
+# Real-Time Ingestion Using Kafka for Currency Normalization Pipeline
+
+## 📈 What Changed?
+
+Originally, the ETL pipeline used a Python script that:
+
+* Called the Open Exchange Rates API
+* Stored exchange rate JSON files directly into S3
+
+Now, we replace that with a **real-time ingestion mechanism using Kafka**. This gives more scalability, flexibility, and mimics enterprise-grade streaming architecture.
+
+---
+
+## 🚀 Step-by-Step Kafka-Based Data Flow
+
+### ✅ 1. Kafka Producer (Python Script)
+
+Runs periodically on an EC2 instance or Airflow scheduler.
+
+**Responsibilities:**
+
+* Calls Open Exchange Rates API:
+
+  ```
+  https://openexchangerates.org/api/historical/<YYYY-MM-DD>.json?app_id=YOUR_API_KEY&base=USD
+  ```
+* Gets a JSON response like:
+
+  ```json
+  {
+    "base": "USD",
+    "date": "2024-05-01",
+    "rates": {
+      "SGD": 1.34,
+      "INR": 83.21,
+      "EUR": 0.92
+    }
+  }
+  ```
+* Pushes the entire JSON to a Kafka topic, e.g., `exchange-rates-topic`
+
+> ✔️ Uses `kafka-python` to send data to the broker
+
+---
+
+### ✅ 2. Kafka Broker
+
+Stores all messages (exchange rate JSON) in a durable topic called `exchange-rates-topic`.
+
+---
+
+### ✅ 3. Kafka → S3 Writer (Two Options)
+
+#### 🅰️ Option A: Kafka Connect with S3 Sink Connector
+
+* Configure Kafka Connect to:
+
+  * Listen to `exchange-rates-topic`
+  * Convert JSON messages into files
+  * Save them as:
+
+    ```
+    s3://financial-data-pipeline-project/exchange_rates/YYYY-MM-DD.json
+    ```
+* No manual code required after setup.
+
+#### 🅱️ Option B: Custom Kafka Consumer (Python)
+
+* Listens to `exchange-rates-topic`
+* Reads each JSON message
+* Saves the file to S3 using `boto3`:
+
+  ```python
+  s3.put_object(
+      Bucket='financial-data-pipeline-project',
+      Key='exchange_rates/2024-05-01.json',
+      Body=json.dumps(data)
+  )
+  ```
+
+---
+
+### ✅ 4. Downstream Spark Batch Processing
+
+* Spark batch job (run via EMR) reads:
+
+  ```
+  s3://financial-data-pipeline-project/exchange_rates/
+  ```
+* Loads and broadcasts exchange rate map
+* Joins with raw transaction data
+* Normalizes values to SGD
+* Writes results to:
+
+  ```
+  s3://financial-data-pipeline-project/processed_data/
+  ```
+
+---
+
+## 📅 Triggering Producer Job
+
+You can run the Kafka Producer job:
+
+* Using **cron**:
+
+  ```bash
+  0 * * * * /usr/bin/python3 /home/ec2-user/kafka_exchange_rate_producer.py >> /var/log/exchange.log 2>&1
+  ```
+* Or orchestrate with **Airflow** DAG
+* Or run continuously with:
+
+  ```python
+  while True:
+      fetch_and_send()
+      time.sleep(3600)
+  ```
+
+---
+
+## 🎟️ Final Data Flow
+
+```
+Open Exchange Rates API
+          ↓
+    Kafka Producer (Python)
+          ↓
+  Kafka Topic: exchange-rates-topic
+          ↓
+Kafka Connect (S3 Sink) or Custom Consumer
+          ↓
+   S3 Bucket: /exchange_rates/YYYY-MM-DD.json
+          ↓
+    Spark Batch Job → Normalize → S3 Output
+```
+
+---
+
+Let me know if you want:
+
+* Sample Python Kafka producer
+* Kafka Connect S3 sink configuration
+* Cron/Airflow setup example
+* IAM roles and permissions checklist

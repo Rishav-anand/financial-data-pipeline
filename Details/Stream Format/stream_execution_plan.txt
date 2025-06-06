@@ -1,0 +1,101 @@
+ High-Level Real-Time Data Pipeline Plan (Kafka-based Ingestion, Batch Transformation)
+ 
+🔶 Phase 1: Real-Time Data Ingestion Layer (Kafka)
+
+	📌 Goal:Ingest real-time exchange rate data (via API) using a Kafka Producer, and publish it to a Kafka Topic.
+
+	✅ Components:
+	Kafka Producer (Python):
+
+	Triggers every 1 hour (via cron or Airflow).
+
+	Hits the OpenExchangeRates API for a specific date (today()).
+
+	Pushes the data (JSON) to Kafka topic: exchange_rates_topic.
+
+	Kafka Topic (exchange_rates_topic):
+
+	Stores JSON messages in the format:
+
+	{
+	  "base": "USD",
+	  "date": "2024-05-01",
+	  "rates": {
+		"SGD": 1.34,
+		"INR": 83.21
+	  }
+	}
+	
+	Kafka Consumer (Python):
+
+	Listens to the topic exchange_rates_topic.
+
+	Writes raw JSON into s3://<bucket>/exchange_rates/YYYY-MM-DD.json.
+
+	🧠 Real-World Concepts Covered:
+	Real-time ingestion using Kafka.
+	Decoupled API-triggering and storage.
+	S3-based data lake architecture (raw layer).
+	Recoverable ingestion (consumer commits offset).
+
+🔶 Phase 2: Batch Transformation Layer (PySpark on EMR)
+
+📌 Goal:Read raw data from S3, normalize all currencies to SGD, and write clean data back to S3.
+
+	✅ Components:
+	Raw Transaction Data (CSV): Already exists in s3://<bucket>/raw_data/.
+
+	Exchange Rate JSONs: Written by the Kafka Consumer into s3://<bucket>/exchange_rates/.
+
+	Spark Batch Job:
+
+	Runs daily on AWS EMR.
+
+	Joins transaction data with exchange rate JSONs.
+
+	Creates new columns: normalized_withdrawal, normalized_deposit.
+
+	Writes Parquet output to s3://<bucket>/processed_data/partitioned_by_date/.
+
+	🧠 Real-World Concepts Covered:
+	Batch over micro-batch architecture.
+
+	S3 partitioning for Athena/Presto.
+
+	Broadcast joins in Spark.
+
+	Data quality checks and logging.
+
+🔶 Phase 3: Downstream Analytics & Serving Layer
+
+📌 Goal:Enable stakeholders and systems to query normalized data efficiently.
+
+	✅ Components:
+	Glue Crawler:
+
+	Crawls s3://<bucket>/processed_data/.
+
+	Creates Athena table with correct schema.
+
+	Athena SQL Queries:
+
+	Used by analysts or scheduled reporting jobs.
+
+	Example use cases:
+
+	Total normalized withdrawals in SGD by month.
+
+	Top accounts by average monthly deposit.
+
+	Optional Enhancements:
+
+	QuickSight dashboards for visualization.
+
+	Redshift copy or Elasticsearch index for fast search.
+
+	🧠 Real-World Concepts Covered:
+	Serverless querying (Athena).
+
+	Cost-efficient warehousing (vs Redshift).
+
+	Seamless Glue-Athena integration.

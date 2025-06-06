@@ -2,7 +2,7 @@
     "api_key": "0528878812ed4c8e9ce89de7c3d88836",
     "s3_bucket": "financial-data-pipeline-project",
     "base_currency": "USD",
-    "start_date": "2023-01-01",
-    "end_date": "2023-01-31"
-  }
+    "start_date": "2025-06-06",
+    "end_date": "2025-06-06"
+}
   
