@@ -4,13 +4,13 @@ import boto3
 from datetime import datetime, timedelta,date
 
 # Load config
-with open('config/config.json') as f:
+with open('config.json') as f:
     config = json.load(f)
 
 s3 = boto3.client('s3')
-bucket_name = config["s3_bucket"]
-app_id = config["api_key"]
-base_currency = config["base_currency"]
+bucket_name = "financial-data-pipeline-project"
+app_id = "0528878812ed4c8e9ce89de7c3d88836"
+base_currency = "USD"
 
 # start_date = datetime.strptime(config["start_date"], "%Y-%m-%d")
 # end_date = datetime.strptime(config["end_date"], "%Y-%m-%d")
