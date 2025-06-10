@@ -3,9 +3,9 @@ import json
 import boto3
 from datetime import datetime, timedelta,date
 
-# Load config
-with open('config.json') as f:
-    config = json.load(f)
+# # Load config
+# with open('config.json') as f:
+#     config = json.load(f)
 
 s3 = boto3.client('s3')
 bucket_name = "financial-data-pipeline-project"
