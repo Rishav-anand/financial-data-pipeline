@@ -2,6 +2,7 @@ import requests
 import json
 import boto3
 from datetime import datetime, timedelta,date
+import sys
 
 # # Load config
 # with open('config.json') as f:
@@ -25,11 +26,17 @@ while date <= end_date:
     date_str = date.strftime("%Y-%m-%d")
     url = f"https://openexchangerates.org/api/historical/{date_str}.json?app_id={app_id}&base={base_currency}"
     
-    response = requests.get(url)
-    if response.status_code == 200:
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception(f"❌ Failed to fetch exchange rate for {date_str}, status code: {response.status_code}")
         filename = f"data/exchange_rates/{date_str}.json"
-        s3.put_object(Bucket=bucket_name, Key=filename, Body=response.content)
-        print(f"Uploaded {filename} to S3.")
-    else:
-        print(f"Failed for {date_str}: {response.status_code}")
+        try:
+            s3.put_object(Bucket=bucket_name, Key=filename, Body=response.content)
+            print(f"✅ Uploaded {filename} to S3.")
+        except Exception as s3_err:
+            raise Exception(f"❌ Failed to upload {filename} to S3: {str(s3_err)}")
+    except Exception as err:
+        print(str(err))
+        sys.exit(1) 
     date += timedelta(days=1)
