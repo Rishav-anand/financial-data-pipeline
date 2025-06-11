@@ -1,0 +1,146 @@
+✅ Step 1: Ingestion Layer — Summary Documentation
+
+🎯 Goal:
+To automate ingestion of exchange rate data using Airflow DAGs that:
+
+    Launch a temporary EC2 instance
+
+    Install necessary dependencies
+
+    Fetch today's exchange rate data using fetch_exchange_rates.py
+
+    Push it to S3
+
+    Terminate the EC2 instance to save cost
+
+🧱 Components Used:
+    Apache Airflow (locally installed)
+
+    AWS EC2 (Amazon Linux 2)
+
+    AWS S3 (Bucket: financial-data-pipeline-project)
+
+    Paramiko (Python SSH library)
+
+    Python Scripts:
+
+    fetch_exchange_rates.py
+
+    install_dependencies.sh
+
+🪜 Step-by-Step Breakdown:
+
+🔹 1. Launch EC2 Instance (Airflow launch_ec2 task)
+    Used boto3 to launch an EC2 instance with:
+
+    AMI: ami-0f535a71b34f2d44a
+
+    Type: t2.micro
+
+    Key Pair: key_value_new
+
+    Security Group: sg-081b72a9b8521180d
+
+    IAM Profile: ec2_access_s3 (with S3 read/write access)
+
+    Waited until the instance was in running state.
+
+    Pushed instance_id and public_ip to XCom for downstream use.
+
+🔹 2. Copy Required Scripts from S3 to EC2 (Airflow copy_script_to_ec2 task)
+    Used boto3 to download files from S3:
+
+    scripts/fetch_exchange_rates.py
+
+    scripts/install_dependencies.sh
+
+    Used paramiko (SFTP) to upload these files to EC2 at:
+
+    /home/ec2-user/fetch_exchange_rates.py
+
+    /home/ec2-user/install_dependencies.sh
+
+🔹 3. Convert .sh Script to Unix Format (Airflow convert_script_to_unix task)
+    SSH into EC2
+
+    Ran:
+    sudo yum install dos2unix -y
+    dos2unix ~/install_dependencies.sh
+    Ensured the script is executable on Linux
+
+🔹 4. Install Dependencies on EC2 (Airflow install_dependencies task)
+    SSH into EC2
+
+    Executed:
+    bash ~/install_dependencies.sh
+    Installed boto3, requests, and other Python packages
+
+🔹 5. Execute Python Script (Airflow run_fetch_script task)
+    SSH into EC2
+
+    Executed:
+    python3 ~/fetch_exchange_rates.py
+    Script:
+
+    Fetched today's exchange rate from [Open Exchange Rates API]
+
+    Uploaded JSON to:
+
+    s3://financial-data-pipeline-project/data/exchange_rates/YYYY-MM-DD.json
+
+🔹 6. Terminate EC2 Instance (Airflow terminate_instance task)
+    Pulled instance_id from XCom
+
+    Used boto3 to call:
+
+    python
+    ec2.terminate_instances(InstanceIds=[instance_id])
+    Waited until EC2 instance was fully terminated
+
+✅ DAG Structure Summary
+    Your DAG includes these tasks in order:
+
+    launch_ec2 
+    ↓
+    copy_script_to_ec2
+    ↓
+    convert_script_to_unix
+    ↓
+    install_dependencies
+    ↓
+    run_fetch_script
+    ↓
+    terminate_instance
+
+⚙️ Safety & Robustness Features
+    Each EC2 public_ip and instance_id are passed using XCom.
+
+    Retry logic in SSH connection ensures stability.
+
+    TriggerRule.ALL_DONE is used for termination to ensure EC2 is cleaned up even on upstream failure.
+
+    Logs are used to verify if "Upload to S3" succeeded.
+
+    📁 File Layout
+    bash
+    Copy
+    Edit
+    financial-data-pipeline-project/
+    ├── scripts/
+    │   ├── fetch_exchange_rates.py
+    │   └── install_dependencies.sh
+    ├── dags/
+    │   └── launch_and_prepare_ec2.py   # Your DAG file
+    ├── ~/.ssh/key_value_new.pem        # SSH key for EC2 access
+    📌 Notes for Future You:
+    Always upload required config files or scripts to EC2 before running dependent tasks.
+
+    Wrap your Python logic in try/except and log key checkpoints (e.g., "Uploaded to S3").
+
+    Reuse this modular DAG design for any job that involves:
+
+    Temporary EC2 compute
+
+    Remote script execution
+
+    Post-processing & cleanup
