@@ -21,14 +21,14 @@ try:
     # ---------- Load raw transactions ---------- ---- ----- ----
     logger.info("📥 Reading raw transaction data from S3...")
     txn_df = spark.read.option("header", "true").option("inferSchema", "true") \
-        .csv("s3://financial-data-pipeline-project/raw_data/raw_transaction_data.csv")
+        .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
 
     # ---------- Fetch and broadcast exchange rates ------------
     logger.info("🔄 Fetching exchange rates JSON files from S3...")
     s3 = boto3.client('s3')
     bucket_name = "financial-data-pipeline-project"
-    prefix = "exchange_rates/"
+    prefix = "data/exchange_rates/"
 
     exchange_rates = {}
     rate_files = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
@@ -96,7 +96,7 @@ try:
     # ---------- Write to S3 as Parquet ----------
     txn_df.write.mode("overwrite") \
         .partitionBy("Date") \
-        .parquet("s3://financial-data-pipeline-project/processed_data/")
+        .parquet("s3://financial-data-pipeline-project/data/processed_data/")
 
     logger.info("✅ ETL pipeline completed successfully.")
 
