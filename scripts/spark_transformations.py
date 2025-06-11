@@ -68,7 +68,7 @@ try:
     rates_df = rates_df.withColumn("Date", col("Date").cast("string"))
 
     # Withdrawal Join
-    txn_df = txn_df.join(
+    txn_df_join = txn_df.join(
         rates_df,
         (txn_df["Date"] == rates_df["Date"]) &
         (txn_df["Withdrawal_currency"] == rates_df["Currency"]),
@@ -77,7 +77,7 @@ try:
     .drop(rates_df["Date"]).drop("Currency")
 
     # Deposit Join
-    txn_df = txn_df.join(
+    txn_df_join = txn_df_join.join(
         rates_df,
         (txn_df["Date"] == rates_df["Date"]) &
         (txn_df["Deposit_currency"] == rates_df["Currency"]),
@@ -85,16 +85,16 @@ try:
     ).withColumnRenamed("Rate", "Deposit_rate") \
     .drop(rates_df["Date"]).drop("Currency")
 
-    txn_df = txn_df.withColumn("normalized_withdrawal", when(col("Withdrawal_amt") == 0, 0).otherwise(col("Withdrawal_amt") / col("Withdrawal_rate")))
+    txn_df_join = txn_df_join.withColumn("normalized_withdrawal", when(col("Withdrawal_amt") == 0, 0).otherwise(col("Withdrawal_amt") / col("Withdrawal_rate")))
 
-    txn_df = txn_df.withColumn("normalized_deposit",when(col("Deposit_amt") == 0, 0).otherwise(col("Deposit_amt") / col("Deposit_rate")))
+    txn_df_join = txn_df_join.withColumn("normalized_deposit",when(col("Deposit_amt") == 0, 0).otherwise(col("Deposit_amt") / col("Deposit_rate")))
 
     logger.info("Showing Final Dataframe..")
     
-    txn_df.show()
+    txn_df_join.show()
     
     # ---------- Write to S3 as Parquet ----------
-    txn_df.write.mode("overwrite") \
+    txn_df_join.write.mode("overwrite") \
         .partitionBy("Date") \
         .parquet("s3://financial-data-pipeline-project/data/processed_data/")
 
