@@ -93,10 +93,10 @@ try:
     
     txn_df.show()
     
-    # # ---------- Write to S3 as Parquet ----------
-    # normalized_df.write.mode("overwrite") \
-    #     .partitionBy("Date") \
-    #     .parquet("s3://financial-data-pipeline-project/processed_data/")
+    # ---------- Write to S3 as Parquet ----------
+    txn_df.write.mode("overwrite") \
+        .partitionBy("Date") \
+        .parquet("s3://financial-data-pipeline-project/processed_data/")
 
     logger.info("✅ ETL pipeline completed successfully.")
 
