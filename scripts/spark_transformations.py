@@ -31,6 +31,7 @@ try:
     prefix = "data/exchange_rates/"
 
     exchange_rates = {}
+    
     rate_files = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
 
     for obj in rate_files.get("Contents", []):
@@ -94,9 +95,9 @@ try:
     txn_df_join.show()
     
     # ---------- Write to S3 as Parquet ----------
-    txn_df_join.write.mode("overwrite") \
-        .partitionBy("Date") \
-        .parquet("s3://financial-data-pipeline-project/data/processed_data/")
+    # txn_df_join.write.mode("overwrite") \
+    #     .partitionBy("Date") \
+    #     .parquet("s3://financial-data-pipeline-project/data/processed_data/")
 
     logger.info("✅ ETL pipeline completed successfully.")
 
