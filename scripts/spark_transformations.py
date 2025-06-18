@@ -62,6 +62,9 @@ try:
     logger.info("Showing rates_df dataframe..")
     rates_df.show()
 
+    #Incremental_load
+    txn_df = txn_df.filter(col('Date') == date.today())
+
     # Step 1: Ensure txn_df's date is a string
     txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
 
