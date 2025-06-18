@@ -32,7 +32,9 @@ try:
     prefix = "data/exchange_rates/"
 
     exchange_rates = {}
-    
+
+    today = date.today()
+
     rate_files = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
 
     for obj in rate_files.get("Contents", []):
@@ -64,7 +66,7 @@ try:
     rates_df.show()
 
     #Incremental_load
-    txn_df = txn_df.filter(col('Date') == date.today())
+    txn_df = txn_df.filter(col('Date') == today)
 
     # Step 1: Ensure txn_df's date is a string
     txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
