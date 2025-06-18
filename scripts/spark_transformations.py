@@ -98,9 +98,9 @@ try:
     txn_df_join.show()
     
     # ---------- Write to S3 as Parquet ----------
-    # txn_df_join.write.mode("overwrite") \
-    #     .partitionBy("Date") \
-    #     .parquet("s3://financial-data-pipeline-project/data/processed_data/")
+    txn_df_join.write.mode("overwrite") \
+        .partitionBy("Date") \
+        .parquet("s3://financial-data-pipeline-project/data/processed_data/")
 
     logger.info("✅ ETL pipeline completed successfully.")
 
