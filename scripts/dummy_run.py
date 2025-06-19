@@ -24,9 +24,9 @@ try:
         .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
 
-    today = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+    today = date.today() - timedelta(days=1)
 
-    txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
+    txn_df = txn_df.withColumn("Date", to_date("Date"))
 
     txn_df_new = txn_df.filter(txn_df['Date'] == today)
 
