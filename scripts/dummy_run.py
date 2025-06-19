@@ -23,11 +23,16 @@ try:
     txn_df = spark.read.option("header", "true").option("inferSchema", "true") \
         .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
+    
+    txn_df.printSchema()
 
     today = date.today() - timedelta(days=1)
 
     txn_df = txn_df.withColumn("Date", to_date("Date"))
 
+    txn_df.printSchema()
+    print(type(today), today)
+    
     txn_df_new = txn_df.filter(txn_df['Date'] == today)
 
     txn_df_new.show()
