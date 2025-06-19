@@ -24,7 +24,7 @@ try:
         .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
 
-    today = date.today() - timedelta(days=1)
+    today = date.today()
 
     txn_df = txn_df.withColumn("Date", to_date("Date","dd-MM-yyyy"))
 
