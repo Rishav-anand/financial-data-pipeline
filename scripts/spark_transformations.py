@@ -35,83 +35,100 @@ try:
 
     today = date.today()
 
-    rate_files = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-
-    for obj in rate_files.get("Contents", []):
-        key = obj["Key"]
-        if key.endswith(".json"):
-            date = key.split("/")[-1].replace(".json", "")
-            file = s3.get_object(Bucket=bucket_name, Key=key)
-            rate_json = json.loads(file['Body'].read())
-            exchange_rates[date] = rate_json.get("rates", {})
-    
-    # Step 1: Flatten the dictionary into a list of rows
-    flattened_data = []
-    for date, currencies in exchange_rates.items():
-        for currency, value in currencies.items():
-            flattened_data.append((date, currency, float(value)))
-
-    # Step 2: Define schema
-    schema = StructType([
-        StructField("date", StringType(), True),
-        StructField("currency", StringType(), True),
-        StructField("rate", FloatType(), True)
-    ])
-
-    # Step 3: Create DataFrame
-    rates_df = spark.createDataFrame(flattened_data, schema=schema)
-
      # Show the DataFrame before filter
     logger.info("Showing txn_df dataframe..")
     txn_df.show()
 
+    # # Step 1: Ensure txn_df's date is a string
+    txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
+
     #Incremental_load
-    txn_df = txn_df.filter(col('Date') == today)
+    txn_df = txn_df.filter(col('Date') == str(today))
 
     # Show the DataFrame
     logger.info("Showing txn_df dataframe..")
     txn_df.show()
 
-    # Show the DataFrame
-    logger.info("Showing rates_df dataframe..")
-    rates_df.show()
-
     # Step 1: Ensure txn_df's date is a string
     txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
 
-    # Step 2: Ensure rates_df's date is a string (usually already is, but just to be sure)
-    rates_df = rates_df.withColumn("Date", col("Date").cast("string"))
+    rate_files = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
 
-    # Withdrawal Join
-    txn_df_join = txn_df.join(
-        rates_df,
-        (txn_df["Date"] == rates_df["Date"]) &
-        (txn_df["Withdrawal_currency"] == rates_df["Currency"]),
-        "left"
-    ).withColumnRenamed("Rate", "Withdrawal_rate") \
-    .drop(rates_df["Date"]).drop("Currency")
-
-    # Deposit Join
-    txn_df_join = txn_df_join.join(
-        rates_df,
-        (txn_df["Date"] == rates_df["Date"]) &
-        (txn_df["Deposit_currency"] == rates_df["Currency"]),
-        "left"
-    ).withColumnRenamed("Rate", "Deposit_rate") \
-    .drop(rates_df["Date"]).drop("Currency")
-
-    txn_df_join = txn_df_join.withColumn("normalized_withdrawal", when(col("Withdrawal_amt") == 0, 0).otherwise(col("Withdrawal_amt") / col("Withdrawal_rate")))
-
-    txn_df_join = txn_df_join.withColumn("normalized_deposit",when(col("Deposit_amt") == 0, 0).otherwise(col("Deposit_amt") / col("Deposit_rate")))
-
-    logger.info("Showing Final Dataframe..")
+    # for obj in rate_files.get("Contents", []):
+    #     key = obj["Key"]
+    #     if key.endswith(".json"):
+    #         date = key.split("/")[-1].replace(".json", "")
+    #         file = s3.get_object(Bucket=bucket_name, Key=key)
+    #         rate_json = json.loads(file['Body'].read())
+    #         exchange_rates[date] = rate_json.get("rates", {})
     
-    txn_df_join.show()
+    # # Step 1: Flatten the dictionary into a list of rows
+    # flattened_data = []
+    # for date, currencies in exchange_rates.items():
+    #     for currency, value in currencies.items():
+    #         flattened_data.append((date, currency, float(value)))
+
+    # # Step 2: Define schema
+    # schema = StructType([
+    #     StructField("date", StringType(), True),
+    #     StructField("currency", StringType(), True),
+    #     StructField("rate", FloatType(), True)
+    # ])
+
+    # # Step 3: Create DataFrame
+    # rates_df = spark.createDataFrame(flattened_data, schema=schema)
+
+    #  # Show the DataFrame before filter
+    # logger.info("Showing txn_df dataframe..")
+    # txn_df.show()
+
+    # #Incremental_load
+    # txn_df = txn_df.filter(col('Date') == today)
+
+    # # Show the DataFrame
+    # logger.info("Showing txn_df dataframe..")
+    # txn_df.show()
+
+    # # Show the DataFrame
+    # logger.info("Showing rates_df dataframe..")
+    # rates_df.show()
+
+    # # Step 1: Ensure txn_df's date is a string
+    # txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
+
+    # # Step 2: Ensure rates_df's date is a string (usually already is, but just to be sure)
+    # rates_df = rates_df.withColumn("Date", col("Date").cast("string"))
+
+    # # Withdrawal Join
+    # txn_df_join = txn_df.join(
+    #     rates_df,
+    #     (txn_df["Date"] == rates_df["Date"]) &
+    #     (txn_df["Withdrawal_currency"] == rates_df["Currency"]),
+    #     "left"
+    # ).withColumnRenamed("Rate", "Withdrawal_rate") \
+    # .drop(rates_df["Date"]).drop("Currency")
+
+    # # Deposit Join
+    # txn_df_join = txn_df_join.join(
+    #     rates_df,
+    #     (txn_df["Date"] == rates_df["Date"]) &
+    #     (txn_df["Deposit_currency"] == rates_df["Currency"]),
+    #     "left"
+    # ).withColumnRenamed("Rate", "Deposit_rate") \
+    # .drop(rates_df["Date"]).drop("Currency")
+
+    # txn_df_join = txn_df_join.withColumn("normalized_withdrawal", when(col("Withdrawal_amt") == 0, 0).otherwise(col("Withdrawal_amt") / col("Withdrawal_rate")))
+
+    # txn_df_join = txn_df_join.withColumn("normalized_deposit",when(col("Deposit_amt") == 0, 0).otherwise(col("Deposit_amt") / col("Deposit_rate")))
+
+    # logger.info("Showing Final Dataframe..")
     
-    # ---------- Write to S3 as Parquet ----------
-    txn_df_join.write.mode("overwrite") \
-        .partitionBy("Date") \
-        .parquet("s3://financial-data-pipeline-project/data/processed_data/")
+    # txn_df_join.show()
+    
+    # # ---------- Write to S3 as Parquet ----------
+    # txn_df_join.write.mode("overwrite") \
+    #     .partitionBy("Date") \
+    #     .parquet("s3://financial-data-pipeline-project/data/processed_data/")
 
     logger.info("✅ ETL pipeline completed successfully.")
 
