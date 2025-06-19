@@ -24,15 +24,15 @@ try:
         .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
     
-    txn_df.printSchema()
+    txn_df.select("Date").distinct().orderBy("Date").show(50, False)
 
     today = date.today() - timedelta(days=1)
 
-    txn_df = txn_df.withColumn("Date", to_date("Date"))
+    txn_df = txn_df.withColumn("Date", to_date("Date","yyyy-MM-dd"))
 
     txn_df.printSchema()
     print(type(today), today)
-    
+
     txn_df_new = txn_df.filter(txn_df['Date'] == today)
 
     txn_df_new.show()
