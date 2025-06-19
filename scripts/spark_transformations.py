@@ -26,10 +26,10 @@ try:
     logger.info("✅ Raw transaction data read successfully.")
 
     # ---------- Fetch and broadcast exchange rates ------------
-    logger.info("🔄 Fetching exchange rates JSON files from S3...")
-    s3 = boto3.client('s3')
-    bucket_name = "financial-data-pipeline-project"
-    prefix = "data/exchange_rates/"
+    # logger.info("🔄 Fetching exchange rates JSON files from S3...")
+    # s3 = boto3.client('s3')
+    # bucket_name = "financial-data-pipeline-project"
+    # prefix = "data/exchange_rates/"
 
     exchange_rates = {}
 
@@ -42,6 +42,10 @@ try:
     # # Step 1: Ensure txn_df's date is a string
     txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
 
+    print(today)
+    print(str(today))
+    txn_df
+    
     #Incremental_load
     txn_df = txn_df.filter(col('Date') == str(today))
 
