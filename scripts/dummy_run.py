@@ -30,9 +30,10 @@ try:
     currency_list = df.select("rates").schema[0].dataType.names
     rows = df.collect()
     data=[]
-    for currency in currency_list:
-        value=rows['rates'][currency]
-        data.append(Row(Date=today,currency=currency,rate=float(value)))
+    for row in rows:
+        for currency in currency_list:
+            value=row['rates'][currency]
+            data.append(Row(Date=today,currency=currency,rate=float(value)))
         
     df_explode = spark.createDataFrame(data)
     df_explode.show()
