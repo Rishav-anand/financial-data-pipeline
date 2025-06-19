@@ -21,33 +21,35 @@ logger.info("✅ Spark session initialized")
 try:
     # ---------- Load raw transactions ---------- ---- ----- ----
     logger.info("📥 Reading raw transaction data from S3...")
-    txn_df = spark.read.option("header", "true").option("inferSchema", "true") \
-        .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
+    txn_df = spark.read.option("header", "true")\
+            .option("inferSchema", "true") \
+            .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
+
+    # Show the DataFrame before filter
+    logger.info("Showing txn_df dataframe after load..")
+    txn_df.show()
+
+    #Ensure txn_df's date is a correct format
+    txn_df = txn_df.withColumn("Date", to_date("Date","dd-MM-yyyy"))
+
+    #-----------------Incremental_load----------------------------------------
+    #find today's date
+    today = date.today()
+
+    #filteration with today's date
+    txn_df = txn_df.filter(txn_df['Date'] == today)
+    
+    # Show the DataFrame
+    logger.info("Showing txn_df dataframe after incremental filteration..")
+    txn_df.show()
 
     # ---------- Fetch and broadcast exchange rates ------------
     logger.info("🔄 Fetching exchange rates JSON files from S3...")
     s3 = boto3.client('s3')
     bucket_name = "financial-data-pipeline-project"
     prefix = "data/exchange_rates/"
-
     exchange_rates = {}
-
-    today = date.today()
-
-     # Show the DataFrame before filter
-    logger.info("Showing txn_df dataframe..")
-    txn_df.show()
-
-    # # Step 1: Ensure txn_df's date is a correct format
-    txn_df = txn_df.withColumn("Date", to_date("Date","dd-MM-yyyy"))
-
-    #Incremental_load
-    txn_df = txn_df.filter(txn_df['Date'] == today)
-
-    # Show the DataFrame
-    logger.info("Showing txn_df dataframe..")
-    txn_df.show()
 
     rate_files = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
 
