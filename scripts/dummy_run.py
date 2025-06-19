@@ -25,8 +25,8 @@ try:
     logger.info("✅ Raw transaction data read successfully.")
 
     today = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
-    
-    txn_df = txn_df.withColumn("Date",txn_df["Date"].cast(StringType()))
+
+    txn_df = txn_df.withColumn("Date", col("Date").cast("string"))
 
     txn_df_new = txn_df.filter(txn_df['Date'] == today)
 
