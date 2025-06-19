@@ -33,7 +33,7 @@ try:
 
     exchange_rates = {}
 
-    today = date.today() - timedelta(days=1)
+    today = date.today()
 
      # Show the DataFrame before filter
     logger.info("Showing txn_df dataframe..")
