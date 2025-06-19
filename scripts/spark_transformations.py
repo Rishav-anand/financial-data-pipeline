@@ -61,6 +61,10 @@ try:
     # Step 3: Create DataFrame
     rates_df = spark.createDataFrame(flattened_data, schema=schema)
 
+     # Show the DataFrame before filter
+    logger.info("Showing txn_df dataframe..")
+    txn_df.show()
+
     #Incremental_load
     txn_df = txn_df.filter(col('Date') == today)
 
