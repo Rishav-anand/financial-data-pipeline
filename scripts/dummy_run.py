@@ -22,7 +22,7 @@ try:
     logger.info("📥 Reading raw transaction data from S3...")
     df = spark.read.format("json")\
             .option('multiline','true')\
-            .load('s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv/2025_06_19.json')
+            .load('s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv/2025-06-19.json')
     logger.info("✅ Raw transaction data read successfully.")
 
     today = date.today()
