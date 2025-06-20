@@ -1,0 +1,32 @@
+Optimizations->
+
+1. Pre-validation Using Pandas Before Spark Transformation
+    Instead of loading raw data into EMR Spark jobs directly :
+        First load and validate the raw CSV from S3 using Pandas on a lightweight EC2.
+        Apply integrity checks, nullability constraints, and filtering (incremental).
+        Then upload the clean subset back to a different S3 location (say s3://bucket/clean_data/).
+        Spark (EMR) job now reads clean data only → reduced compute cost, faster job, less memory usage.
+(problem faced here->
+        🔹 Problem 1: Date column is object after read_csv() but it should read as date type correct but it didn't?
+        Why: Pandas doesn’t auto-parse dates
+        df = pd.read_csv("file.csv", parse_dates=["Date"]) or 
+        df['Date'] = pd.to_datetime(df['Date'],dayfirst=True)
+
+        🔹 Problem 2: Used .strftime() and comparison with today failed
+        Why: .strftime() converts date to string
+        Fix:
+        df["Date"] = pd.to_datetime(df["Date"])
+        today = pd.to_datetime(date.today())
+        df_filtered = df[df["Date"].dt.date == today.date()]
+
+        🔹 Problem 3: Got warning with dayfirst=True
+        Why: Format was YYYY-MM-DD, but dayfirst=True expects DD-MM-YYYY
+        Fix:
+        df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d")
+
+        🔹 Problem 4: Want to format as dd.mm.yy
+        Fix (for display only):
+        df["Formatted_Date"] = df["Date"].dt.strftime("%d.%m.%y")
+        today_str = today.strftime("%d.%m.%y")
+)
+2. Incremtal model        

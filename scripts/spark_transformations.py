@@ -23,7 +23,7 @@ try:
     logger.info("📥 Reading raw transaction data from S3...")
     txn_df = spark.read.option("header", "true")\
             .option("inferSchema", "true") \
-            .csv("s3://financial-data-pipeline-project/data/raw/raw_transaction_data.csv")
+            .csv("s3://financial-data-pipeline-project/data/cleaned_raw/raw_transaction_data.csv")
     logger.info("✅ Raw transaction data read successfully.")
 
     # Show the DataFrame before filter
@@ -32,13 +32,6 @@ try:
 
     #Ensure txn_df's date is a correct format
     txn_df = txn_df.withColumn("Date", to_date("Date","dd-MM-yyyy"))
-
-    #-----------------Incremental_load----------------------------------------
-    #find today's date
-    today = date.today()
-
-    #filteration with today's date
-    txn_df = txn_df.filter(txn_df['Date'] == today)
 
     # Show the DataFrame
     logger.info("Showing txn_df dataframe after incremental filteration..")
