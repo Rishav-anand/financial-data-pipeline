@@ -12,7 +12,7 @@ df['Date'] = pd.to_datetime(df['Date'])
 
 #incremental load
 df_filter_today = df[df['Date'].dt.date == today.date()]
-print(df_filter_today)
+#print(df_filter_today)
 
 #Integrity checks
 # If Withdrawal_amt is not null, then Withdrawal_currency must not be null.
@@ -35,6 +35,6 @@ raw_transaction_cleaned.drop(["flag1","flag2"],axis=1,inplace=True)
 
 #pushing file to S3
 rejected_data.to_csv("s3://financial-data-pipeline-project/data/rejected_data/rejected_data.csv")
-raw_transaction_cleaned.to_csv("s3://financial-data-pipeline-project/data/cleaned_raw/raw_transaction_data.csv")
+raw_transaction_cleaned.to_csv("s3://financial-data-pipeline-project/data/cleaned_raw/temp/raw_transaction_data.csv")
 print("Write successful..")
     

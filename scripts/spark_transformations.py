@@ -33,10 +33,6 @@ try:
     #Ensure txn_df's date is a correct format
     txn_df = txn_df.withColumn("Date", to_date("Date","dd-MM-yyyy"))
 
-    # Show the DataFrame
-    logger.info("Showing txn_df dataframe after incremental filteration..")
-    txn_df.show()
-
     # ---------- Fetch all exchange_rates.json file from s3 and convert into single df with respective dates ------------
 
     #It dynamically fectch all json one by one with its dates but this used when we need to proccess all files from s3 hence i am writing

@@ -1,11 +1,18 @@
 Optimizations->
 
-1. Pre-validation Using Pandas Before Spark Transformation
-    Instead of loading raw data into EMR Spark jobs directly :
-        First load and validate the raw CSV from S3 using Pandas on a lightweight EC2.
-        Apply integrity checks, nullability constraints, and filtering (incremental).
-        Then upload the clean subset back to a different S3 location (say s3://bucket/clean_data/).
-        Spark (EMR) job now reads clean data only → reduced compute cost, faster job, less memory usage.
+“I’ve introduced several optimizations to improve Spark performance:
+  1. Validated and filtered the data with Pandas on EC2 before EMR to reduce Spark load.
+  2. Broadcasted the daily exchange rate DataFrame (as it’s small) to avoid full shuffle joins.
+  3. Repartitioned on Account_ID before aggregation to balance task sizes.
+  4. Handled skew by using salting when heavy accounts dominated the data.
+  5. Wrote outputs in Parquet, partitioned by date to optimize downstream queries with Athena or Redshift Spectrum.”
+
+Explanation :->
+
+1. Pre-validation Using Pandas Before Spark Transformation :
+    I use a Pandas-based pre-validation step to ensure only clean, today's records are passed to Spark. 
+    This reduces cluster load and cost. The Spark job assumes input integrity and focuses solely on 
+    transformations like normalization, enrichment with exchange rates, and writing final outputs to S3
 (problem faced here->
         🔹 Problem 1: Date column is object after read_csv() but it should read as date type correct but it didn't?
         Why: Pandas doesn’t auto-parse dates
@@ -29,4 +36,7 @@ Optimizations->
         df["Formatted_Date"] = df["Date"].dt.strftime("%d.%m.%y")
         today_str = today.strftime("%d.%m.%y")
 )
-2. Incremtal model        
+Also build Incremtal model
+
+ 2. Broadcast Join with Exchange Rate Table
+“The exchange rates dataset is very small and updated daily, so I use broadcast join in Spark to avoid unnecessary shuffle during the join.”
