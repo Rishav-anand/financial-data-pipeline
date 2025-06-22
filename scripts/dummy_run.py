@@ -27,16 +27,16 @@ try:
     unfiltered_data = unfiltered_data.withColumn(
         "Date",to_date("Date")
     )
-    logger.infor("showing unfiltered Data..")
+    logger.info("showing unfiltered Data..")
     unfiltered_data.show()
 
     unfiltered_data = unfiltered_data.withColumn("Day",day("Date"))\
                                      .withColumn("Month",month("Date"))\
                                      .withColumn("Year",year("Date"))
     
-    logger.infor("showing unfiltered Data..")
+    logger.info("showing unfiltered Data..")
     unfiltered_data.show()
-    
+
     unfiltered_data.write.partitionBy("Year","Month","Day")\
                    .mode("append")\
                    .parquet("s3://financial-data-pipeline-project/data/cleaned_raw/partitioned/")
