@@ -22,6 +22,11 @@ fi
 echo "[*] Installing boto3 and requests..."
 pip3 install --user requests boto3
 
+echo "[*] Installing all dependencies of padndas file..."
+pip3 install pandas
+pip3 install fsspec
+pip3 install s3fs
+
 echo "[✓] All dependencies installed."
 
 

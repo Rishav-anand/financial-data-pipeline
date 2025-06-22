@@ -19,9 +19,9 @@ print(df_filter_today)
 # If Deposit_amt is not null, then Deposit_currency must not be null.
 # If violation is found → move the record to a rejected_data.csv file.
 
-print("Missing Values of Withdrawal_amt before:",df_filter_today["Withdrawal_amt"].isnull().sum())
+#print("Missing Values of Withdrawal_amt before:",df_filter_today["Withdrawal_amt"].isnull().sum())
 df_filter_today.loc[:, "Withdrawal_amt"] = df_filter_today["Withdrawal_amt"].fillna(0)
-print("Missing Values of Withdrawal_amt after:",df_filter_today["Withdrawal_amt"].isnull().sum())
+#print("Missing Values of Withdrawal_amt after:",df_filter_today["Withdrawal_amt"].isnull().sum())
 
 df_filter_today.loc[:,"Deposit_amt"] = df_filter_today["Deposit_amt"].fillna(0)
 
