@@ -44,7 +44,7 @@ try:
     month = today.month
     day = today.day
 
-    txn_df= txn_df.filter((txn_df["Year"] = year) & (txn_df["Month"] = month)& (txn_df["Day"] = day))
+    txn_df= txn_df.filter((txn_df["Year"] == year) & (txn_df["Month"] == month)& (txn_df["Day"] == day))
 
     # Show the DataFrame before filter
     logger.info("Showing txn_df dataframe after load..")
