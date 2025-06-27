@@ -24,6 +24,7 @@ spark = SparkSession.builder\
         .getOrCreate()
 logger.info("✅ Spark session initialized")
 
+
 try:
     #-------Loading raw transaction pandas validated data ----------------------------
     logger.info("📥 Reading raw transaction data from S3/cleaned/temp folder...")
