@@ -42,16 +42,16 @@ try:
                    .parquet("s3://financial-data-pipeline-project/data/cleaned_raw/partitioned/")
     
     #-------- Updating Hive-compatible external table -------------------------------------------------
-    logger.info("Altering Table in data catalog")
-    today = date.today()
-    year = today.year
-    month = today.month
-    day = today.day
-    spark.sql(f"""
-        alter table financial_pipeline_db_n.partitioned add if not exists partition (year={year},month={month},day={day})
-              location 's3://financial-data-pipeline-project/data/cleaned_raw/partitioned/year={year}/month={month}/day={day}/'
-    """)
-    logger.info("📥 Updated succefully")
+    # logger.info("Altering Table in data catalog")
+    # today = date.today()
+    # year = today.year
+    # month = today.month
+    # day = today.day
+    # spark.sql(f"""
+    #     alter table financial_pipeline_db_n.partitioned add if not exists partition (year={year},month={month},day={day})
+    #           location 's3://financial-data-pipeline-project/data/cleaned_raw/partitioned/year={year}/month={month}/day={day}/'
+    # """)
+    # logger.info("📥 Updated succefully")
 
     # # ---------- Load raw transactions ---------- ---- ----- ----
     # logger.info("📥 Reading raw transaction data from S3/cleaned/partitioned folder...")
