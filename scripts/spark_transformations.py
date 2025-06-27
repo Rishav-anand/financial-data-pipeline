@@ -34,7 +34,11 @@ try:
                    .mode("append")\
                    .parquet("s3://financial-data-pipeline-project/data/cleaned_raw/partitioned/")
 
-    # ---------- Load raw transactions ---------- ---- ----- ----
+    #-------- Updating Hive-compatible external table -------------------------------------------------
+
+
+
+    # ---------- Load raw transactions ----------------------------------------------------------------
     logger.info("📥 Reading raw transaction data from S3/cleaned/partitioned folder...")
     txn_df = spark.read.parquet("s3://financial-data-pipeline-project/data/cleaned_raw/partitioned/")
     logger.info("✅ Raw transaction data read successfully.")

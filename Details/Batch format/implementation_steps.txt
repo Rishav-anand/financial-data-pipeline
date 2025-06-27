@@ -3,9 +3,7 @@ Optimizations->
 “I’ve introduced several optimizations to improve Spark performance:
   1. Validated and filtered the data with Pandas on EC2 before EMR to reduce Spark load.
   2. Broadcasted the daily exchange rate DataFrame (as it’s small) to avoid full shuffle joins.
-  3. Repartitioned on Account_ID before aggregation to balance task sizes.
-  4. Handled skew by using salting when heavy accounts dominated the data.
-  5. Wrote outputs in Parquet, partitioned by date to optimize downstream queries with Athena or Redshift Spectrum.”
+  3. Wrote outputs in Parquet, partitioned by date to optimize downstream queries with Athena or Redshift Spectrum.”
 
 Explanation :->
 
@@ -13,6 +11,7 @@ Explanation :->
     I use a Pandas-based pre-validation step to ensure only clean, today's records are passed to Spark. 
     This reduces cluster load and cost. The Spark job assumes input integrity and focuses solely on 
     transformations like normalization, enrichment with exchange rates, and writing final outputs to S3
+    or (We use Pandas for quick pre-validation of incoming transaction data, especially for checking nulls and basic integrity rules.)
 (problem faced here->
         🔹 Problem 1: Date column is object after read_csv() but it should read as date type correct but it didn't?
         Why: Pandas doesn’t auto-parse dates

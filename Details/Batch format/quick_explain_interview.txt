@@ -1,0 +1,31 @@
+********** Project Summary – Financial Transaction Data Pipeline ***************
+
+This is a cloud-native batch processing pipeline designed to process multi-source financial transaction data from various 
+banking sectors and make it analytics-ready for downstream consumption.
+
+🔗 Data Sources:
+  External API (JSON format) – Provides live financial exchange rate data.
+  Static CSV (Transaction data) – Daily customer transactions from a third-party application.
+  Both datasets are ingested and stored in Amazon S3 for scalable processing.
+
+⚙️ Data Processing Architecture (Medallion Layers):
+
+  🔹 Bronze Layer – Raw Ingestion
+    -> Developed a Python-based ingestion script to call external APIs.
+    -> Performed data quality checks (e.g., null handling, schema validation).
+    -> Then loading the cleaned data into a "Hive-compatible external table" whose schema is managed by the AWS Glue Data Catalog 
+      and the data is stored in Amazon S3. And to implement this - We used Spark SQL to dynamically register new partitions in Glue, 
+      making the cleaned data immediately available for downstream analytics in Athena and BI tools 
+
+  🔸 Silver Layer – Transformation
+    Normalized nested JSON into a structured DataFrame.
+    From the Hive table (Source 2), implemented incremental load logic to fetch only new delta records.
+    Applied business transformation logic using PySpark, including joins and currency normalization.
+
+  🥇 Gold Layer – Aggregation
+    After the transformation step, we store the curated data back to Amazon S3, typically in Parquet format.
+    Then, we have an automated Glue Crawler that runs periodically or is event-triggered to detect new data in the S3 'processed' 
+    folder and update the Glue Data Catalog with the corresponding schema.
+    From the catalog, the data becomes queryable via Athena for ad-hoc or analytics use cases.
+    And if there's a need for advanced data warehousing use cases like SCDs, CDCs, or BI dashboards, we load that same data into
+    Amazon Redshift — either directly from S3 using the COPY command or through ETL pipelines.

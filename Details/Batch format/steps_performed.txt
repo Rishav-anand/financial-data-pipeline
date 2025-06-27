@@ -1,0 +1,24 @@
+step 1:
+We use Pandas for quick pre-validation of incoming transaction data, especially for checking nulls and basic integrity rules.
+
+step 2:
+After that, we push the cleaned CSV to S3 in a temporary folder. Then, in our PySpark job running on EMR, we read that validated 
+CSV and write it out in Parquet format, partitioned by year, month, and day (termed as partition pruning)
+👉 Partitioning pruning :
+Partition pruning is a performance optimization in Spark where it automatically reads only the partitions 
+it needs, instead of scanning all data.
+
+step 3:
+We’ve implemented incremental loading using this partition pruning.
+👉 Incremental loading means:
+You process only the new or updated data, instead of reprocessing the entire dataset every time.
+
+step 4:
+Broadcast Join with Exchange Rate Table
+“The exchange rates dataset is very small and updated daily, so I use broadcast join in Spark to avoid unnecessary shuffle during 
+the join.”
+
+step 5:
+"At the end of the transformation step, we write the cleaned and enriched data into an S3 bucket in Parquet format, 
+partitioned by year, month, and day. This structure enables downstream teams to efficiently query the data using partition 
+pruning and predicate pushdown, significantly improving performance and reducing I/O overhead."
